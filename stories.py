@@ -64,10 +64,10 @@ CARDS = [
      "at": (174.8, -36.8),
      "hed": "GTA VI unlocks first in New Zealand",
      "dek": "13 years after GTA V; launch rolls west from 11:00 GMT."},
-    {"art": "border", "region": "AFRICA", "beat": "HORN OF AFRICA", "src": "REUTERS",
-     "at": (38.9, 14.8),
-     "hed": "Ethiopia and Eritrea mass troops on their border",
-     "dek": "Reuters: both armies gather; no clashes confirmed."},
+    {"art": "gaza", "region": "MIDDLE EAST", "beat": "GAZA", "src": "REUTERS",
+     "at": (34.4, 31.4),
+     "hed": "Israeli tanks push into central Gaza",
+     "dek": "First raid past the ceasefire line since 2025; Hamas calls it a violation."},
 ]
 
 # "Also on Wednesday 18 November": (place, text, region, (lon, lat))
@@ -79,6 +79,7 @@ BRIEFS = [
     ("Shenzhen", "Trump announces Philippine trade deal, no terms", "ASIA", (114.1, 22.5)),
     ("Yemen", "Saudi-led coalition says it hit 60 Houthi sites", "MIDDLE EAST", (44.2, 15.4)),
     ("Israel", "Katz: troops stay in Lebanon, Syria, Gaza zones", "MIDDLE EAST", (35.2, 31.8)),
+    ("Horn of Africa", "Ethiopia and Eritrea mass troops on border", "AFRICA", (38.9, 14.8)),
     ("Dhaka", "troops deployed as unrest over Hasina grows", "ASIA", (90.4, 23.8)),
     ("Jakarta", "Bank Indonesia raises rates to 6.00%", "ASIA", (106.8, -6.2)),
     ("Kashmir", "top LeT commander killed in Kulgam", "ASIA", (75.0, 33.6)),
@@ -100,11 +101,13 @@ BRIEFS = [
     ("Hobart", "England beat Australia to win ODI series 2\u20131", "OCEANIA", (147.3, -42.9)),
 ]
 
-STATS = [
-    ("141", "Russian drones fired at Ukraine overnight; 126 downed"),
-    ("25.9bn km", "Voyager 1 from Earth: one light-day"),
-    ("56\u201344", "Democratic Senate after AP calls Alaska"),
-    ("$3,800", "gold breaks below it for the first time in 14 months"),
+# The day by the clock, in UTC: only times stated by the sources.
+TIMELINE = [
+    ("02:42", "Gold falls below $3,800", "GLOBAL"),
+    ("03:19", "AP calls Alaska for Peltola", "AMERICAS"),
+    ("06:30", "Kospi closes up 2.7%", "ASIA"),
+    ("10:16", "Voyager 1 reaches one light-day", "SPACE"),
+    ("11:00", "GTA VI unlocks in New Zealand", "OCEANIA"),
 ]
 
 JUDGE_NOTE = "Everything on this page happened, or was first reported, on Wednesday 18 November 2026."

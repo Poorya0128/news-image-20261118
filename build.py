@@ -537,6 +537,24 @@ def art_markets(x, y, w, h):
         text(tx + 6 + tlen(lab + " ", tf), ty + 1.5, val, tf, CAT["ECONOMY"])
 
 
+def art_gaza(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (236, 214, 176), (210, 176, 132))
+    rect(x, y + h - 18, x + w, y + h, fill=(186, 150, 108))
+    for i in range(6):
+        tx = x + 6 + i * 22
+        poly([(tx, y + h - 18), (tx + 9, y + h - 34), (tx + 18, y + h - 18)], (248, 244, 232), outline=OUT, width=1)
+    lx = x + w * 0.66
+    for k in range(6):
+        line([(lx, y + 6 + k * (h - 12) / 6), (lx, y + 6 + k * (h - 12) / 6 + (h - 12) / 12)], (214, 168, 20), 2.4)
+    text(lx - 5, y + 4, "CEASEFIRE LINE", cond(10.5, 900), (120, 80, 10), anchor="ra", tracking=0.4)
+    cx, cy = x + w * 0.80, y + h - 22
+    rrect(cx - 26, cy - 6, cx + 26, cy + 8, 6, fill=(86, 92, 76), outline=OUT, width=1.4)
+    for k in range(5):
+        ellipse(cx - 20 + k * 10, cy + 8, 4.2, 4.2, fill=(52, 54, 46))
+    rrect(cx - 12, cy - 16, cx + 10, cy - 5, 4, fill=(104, 110, 92), outline=OUT, width=1.4)
+    line([(cx - 12, cy - 11), (cx - 40, cy - 14)], OUT, 2.6)
+
+
 ART = {"eu": art_eu, "cop": art_cop, "voyager": art_voyager, "markets": art_markets}
 
 
@@ -791,7 +809,7 @@ def art_border(x, y, w, h):
 ART = {"shenzhen": art_shenzhen, "gulf": art_gulf, "voyager": art_voyager_lead,
        "eu": art_eu, "drones_ua": art_drones_ua, "alaska": art_alaska, "cop": art_cop,
        "inflation": art_inflation, "cyclone": art_cyclone, "sudan": art_sudan,
-       "gold": art_gold, "gta": art_gta, "border": art_border}
+       "gold": art_gold, "gta": art_gta, "border": art_border, "gaza": art_gaza}
 
 
 # ------------------------------------------------------------------ page
@@ -917,15 +935,18 @@ def map_block(x0, y0, w):
     return my + h
 
 
-def stats_block(x0, y0, w):
-    cw = (w - 12) / 2
-    for i, (big, small) in enumerate(st.STATS):
-        cx = x0 + (i % 2) * (cw + 12)
-        cy = y0 + (i // 2) * 52
-        line([(cx, cy), (cx + cw, cy)], INK, 1.2)
-        text(cx, cy + 3, big, serif(18, 900), INK)
-        for k, ln in enumerate(wrap(small, sans(11, 500, 80), cw)[:2]):
-            text(cx, cy + 25 + k * 12.5, ln, sans(11, 500, 80), INK2)
+def timeline_block(x0, y0, w, y_end):
+    text(x0, y0, "THE DAY BY THE CLOCK \u00b7 UTC", cond(13, 900), INK, tracking=1.2)
+    y = y0 + 19
+    line([(x0, y), (x0 + w, y)], INK, 1.2)
+    rows = st.TIMELINE
+    step = (y_end - y - 4) / len(rows)
+    for k, (tm, what, reg) in enumerate(rows):
+        yy = y + 4 + k * step
+        col = REG[reg]
+        rect(x0, yy + 1, x0 + 46, yy + 17, fill=col)
+        text(x0 + 23, yy + 2, tm, cond(13, 900), (255, 255, 255), anchor="ma")
+        text(x0 + 54, yy + 1.5, what, sans(13, 600, 80), INK)
 
 
 def also_block(x0, y0, x1, y_end):
@@ -988,7 +1009,7 @@ def build():
     y += 8
     mw = 330
     map_end = map_block(M, y, mw)
-    stats_block(M, map_end + 10, mw)
+    timeline_block(M, map_end + 10, mw, 998)
     also_block(M + mw + 22, y, R, 998)
     footer()
 
