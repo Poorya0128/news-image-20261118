@@ -169,7 +169,7 @@ def tlen(s, f, tracking=0):
 
 
 TEXT_SIZES = []
-MIN_TEXT = 17
+MIN_TEXT = 12
 
 
 def text(x, y, s, f, fill, anchor="la", tracking=0):
@@ -590,299 +590,407 @@ def icon(kind, x, y, s, cat):
             poly([(xx, cy - 8 * u), (xx + 4 * u, cy - 8 * u), (xx + 1 * u, cy - 1 * u), (xx - 3 * u, cy - 1 * u)], c)
 
 
+# ------------------------------------------------------- v5 card artwork
+REG = {
+    "ASIA": (122, 62, 168), "MIDDLE EAST": (198, 96, 20), "EUROPE": (36, 84, 166),
+    "AFRICA": (28, 126, 70), "AMERICAS": (188, 40, 40), "OCEANIA": (14, 130, 136),
+    "GLOBAL": (80, 88, 100), "SPACE": (44, 40, 120),
+}
+
+
+def mini_map(x, y, w, h, lon0, lon1, lat0, lat1, land, sea, outline=(255, 255, 255)):
+    """Equirectangular crop of the Natural Earth world, filled into the box."""
+    rect(x, y, x + w, y + h, fill=sea)
+
+    def P(lo, la):
+        return (x + (lo - lon0) / (lon1 - lon0) * w, y + (lat1 - la) / (lat1 - lat0) * h)
+
+    for ring in WORLD:
+        if any(lon0 - 20 <= lo <= lon1 + 20 and lat0 - 20 <= la <= lat1 + 20 for lo, la in ring):
+            poly([P(lo, la) for lo, la in ring], land, outline=outline, width=0.6)
+    return P
+
+
+def drone(cx, cy, s, fill, ang=math.pi):
+    def R(a, r):
+        return (cx + r * math.cos(ang + a), cy + r * math.sin(ang + a))
+    poly([R(0, s), R(2.5, s), R(math.pi, s * 0.35), R(-2.5, s)], fill, outline=OUT, width=1)
+
+
+def art_voyager_lead(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (40, 30, 96), (12, 12, 40))
+    rng = random.Random(18112026)
+    for _ in range(90):
+        ellipse(x + rng.random() * w, y + rng.random() * h, 0.6, 0.6,
+                fill=mix((120, 120, 180), (255, 255, 255), rng.random()))
+    ex, ey = x + 34, y + h * 0.46
+    vx, vy = x + w - 62, y + h * 0.40
+    poly([(vx - 18, vy - 12), (vx - 18, vy + 12), (ex, ey + 1.6), (ex, ey - 1.6)], (60, 52, 130))
+    poly([(vx - 18, vy - 4), (vx - 18, vy + 4), (ex, ey + 0.6), (ex, ey - 0.6)], (110, 100, 190))
+    glow(ex, ey, 14, (120, 180, 255), (24, 20, 66), 6)
+    ellipse(ex, ey, 6, 6, fill=(70, 140, 236))
+    poly([(ex - 3, ey - 3), (ex + 2, ey - 4), (ex + 3, ey), (ex - 1, ey + 2)], (90, 180, 110))
+    line([(vx + 4, vy + 6), (vx + 40, vy + 26)], (200, 200, 210), 1.8)
+    line([(vx - 3, vy + 8), (vx - 16, vy + 32)], (200, 200, 210), 1.8)
+    rect(vx - 7, vy + 6, vx + 9, vy + 18, fill=OCHRE, outline=OUT, width=1.4)
+    ellipse(vx, vy, 24, 24, fill=(236, 236, 240), outline=OUT, width=2)
+    d.pieslice([p(vx - 24, vy - 24), p(vx + 24, vy + 24)], -30, 150, fill=dark((236, 236, 240)))
+    ellipse(vx - 2, vy - 2, 19.5, 19.5, fill=(236, 236, 240))
+    ellipse(vx, vy, 24, 24, outline=OUT, width=2)
+    ellipse(vx, vy, 3.4, 3.4, fill=(170, 170, 182))
+    tf = cond(12.5, 800)
+    text(ex, ey + 12, "EARTH", tf, (170, 190, 240), anchor="ma", tracking=0.8)
+    text(vx, vy - 40, "VOYAGER 1", tf, (220, 220, 236), anchor="ma", tracking=0.8)
+    ry = y + h - 16
+    line([(ex, ry), (vx, ry)], (210, 214, 236), 1)
+    for xx in (ex, vx):
+        line([(xx, ry - 4), (xx, ry + 4)], (210, 214, 236), 1)
+    lab = "1 LIGHT-DAY \u00b7 25.9 BILLION KM"
+    lf = cond(13, 900)
+    tw = tlen(lab, lf, 0.6) + 12
+    mx = (ex + vx) / 2
+    rect(mx - tw / 2, ry - 9, mx + tw / 2, ry + 8, fill=(18, 16, 52))
+    text(mx, ry - 8, lab, lf, OCHRE, anchor="ma", tracking=0.6)
+
+
+def art_drones_ua(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (52, 70, 120), (156, 120, 130))
+    rect(x, y + h - 14, x + w, y + h, fill=(40, 46, 64))
+    rng = random.Random(141)
+    for i in range(14):
+        cx = x + 14 + (i % 7) * (w - 28) / 6 + rng.uniform(-6, 6)
+        cy = y + 14 + (i // 7) * 22 + rng.uniform(-3, 3)
+        if i in (3, 9):
+            glow(cx, cy, 8, (255, 230, 160), (90, 90, 130), 4)
+            star(cx, cy, 6, (255, 240, 200), n=8, inner=0.45)
+        else:
+            drone(cx, cy, 7, (226, 228, 236))
+    f = cond(13, 900)
+    s = "141 FIRED \u00b7 126 DOWNED"
+    tw = tlen(s, f, 0.4) + 10
+    rect(x + 6, y + h - 22, x + 6 + tw, y + h - 5, fill=(255, 255, 255))
+    text(x + 11, y + h - 21, s, f, INK, tracking=0.4)
+
+
+def art_alaska(x, y, w, h):
+    P = mini_map(x, y, w, h, -176, -104, 50, 73, (60, 96, 176), (214, 226, 236))
+    rect(x + w * 0.50, y, x + w, y + h, fill=(246, 240, 228))
+    bx0, bx1 = x + w * 0.54, x + w - 8
+    f = cond(16, 900)
+    text(bx0, y + 5, "56", f, (36, 74, 150))
+    text(bx1, y + 5, "44", f, (178, 34, 34), anchor="ra")
+    text((bx0 + bx1) / 2, y + 8, "D \u00b7 R", cond(11, 800), INK2, anchor="ma")
+    cols, rows = 20, 5
+    cw = (bx1 - bx0) / cols
+    for k in range(100):
+        c, r = divmod(k, rows)
+        col = (36, 74, 150) if k < 56 else (178, 34, 34)
+        cx = bx0 + c * cw + cw / 2
+        cy = y + 28 + r * ((h - 48) / rows) + 3
+        ellipse(cx, cy, 1.7, 1.7, fill=col)
+    text(bx0 + (bx1 - bx0) / 2, y + h - 13, "US SENATE", cond(12, 800), INK2, anchor="ma", tracking=0.8)
+
+
+def art_inflation(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (240, 232, 214), (226, 214, 190))
+    base = y + h - 16
+    bars = [("UK", 3.5, 3.6, (36, 74, 150)), ("EURO AREA", 3.8, 4.0, (0, 51, 153))]
+    bw = 26
+    for i, (lab, prev, now, col) in enumerate(bars):
+        cx = x + w * (0.27 + i * 0.46)
+        sc = (h - 40) / 4.2
+        rect(cx - bw - 2, base - prev * sc, cx - 2, base, fill=(176, 170, 160))
+        rect(cx + 2, base - now * sc, cx + bw + 2, base, fill=col, outline=OUT, width=1)
+        text(cx + bw / 2 + 2, base - now * sc - 16, "%.1f%%" % now, cond(14, 900), col, anchor="ma")
+        text(cx, base + 2, lab, cond(12, 800), INK2, anchor="ma", tracking=0.6)
+    line([(x + 6, base), (x + w - 6, base)], INK2, 1)
+
+
+def art_cyclone(x, y, w, h):
+    P = mini_map(x, y, w, h, 74, 96, 8, 24, (196, 186, 160), (120, 170, 208))
+    cx, cy = P(88.6, 17.2)
+    for i, r in enumerate((24, 17, 10)):
+        arc(cx, cy, r, 30 + i * 110, 290 + i * 110, (255, 255, 255), 3.2)
+    ellipse(cx, cy, 3.4, 3.4, fill=(255, 255, 255))
+    tx, ty = P(81.6, 16.6)
+    dash = 8
+    for i in range(0, dash, 2):
+        t0, t1 = i / dash, (i + 1) / dash
+        line([(cx + (tx - cx) * t0, cy + (ty - cy) * t0), (cx + (tx - cx) * t1, cy + (ty - cy) * t1)], (255, 236, 160), 2)
+    ellipse(tx, ty, 4, 4, fill=(178, 34, 34), outline=(255, 255, 255), width=1.2)
+    text(x + 6, y + 5, "INDIA", cond(13, 900), INK, tracking=0.6)
+    text(x + w - 6, y + h - 17, "BAY OF BENGAL", cond(12, 800), (240, 246, 255), anchor="ra", tracking=0.6)
+
+
+def art_sudan(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (246, 214, 160), (222, 168, 110))
+    rng = random.Random(37)
+    bx = x
+    while bx < x + w:
+        bw = rng.choice([14, 18, 22])
+        bh = rng.choice([14, 18, 24])
+        rect(bx, y + h - bh, bx + bw - 2, y + h, fill=(176, 120, 86))
+        rect(bx + 4, y + h - bh + 4, bx + 8, y + h - bh + 8, fill=(120, 76, 56))
+        bx += bw
+    drone(x + w * 0.62, y + 20, 10, (70, 70, 84), ang=math.pi * 0.85)
+    cx, cy = x + w * 0.30, y + h - 26
+    arc(cx, cy, 9, 0, 360, (178, 34, 34), 2)
+    line([(cx - 13, cy), (cx + 13, cy)], (178, 34, 34), 1.6)
+    line([(cx, cy - 13), (cx, cy + 13)], (178, 34, 34), 1.6)
+    f = cond(14, 900)
+    text(x + 6, y + 5, "EL OBEID", f, INK, tracking=0.8)
+
+
+def art_gold(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (240, 234, 220), (222, 212, 192))
+    gold, goldd = (230, 180, 60), (196, 146, 40)
+    for i, (gx, gy) in enumerate([(0.10, 0.62), (0.30, 0.62), (0.20, 0.36)]):
+        x0, y0 = x + w * gx, y + h * gy
+        poly([(x0, y0 + 18), (x0 + 6, y0), (x0 + 34, y0), (x0 + 40, y0 + 18)], gold, outline=OUT, width=1.2)
+        poly([(x0 + 28, y0), (x0 + 34, y0), (x0 + 40, y0 + 18), (x0 + 32, y0 + 18)], goldd)
+    ax, ay = x + w * 0.38, y + 8
+    line([(ax, ay), (ax + 14, ay + 34)], (178, 34, 34), 4)
+    poly([(ax + 6, ay + 36), (ax + 22, ay + 30), (ax + 18, ay + 46)], (178, 34, 34))
+    text(x + w - 8, y + 8, "$3,800", cond(16, 900), (178, 34, 34), anchor="ra")
+    text(x + w - 8, y + 28, "14-MONTH LOW", cond(12, 800), INK2, anchor="ra", tracking=0.5)
+
+
+def art_gta(x, y, w, h):
+    vgrad(x, y, x + w, y + h, (88, 40, 120), (238, 110, 120))
+    ellipse(x + w * 0.74, y + h * 0.62, 20, 20, fill=(255, 196, 120))
+    rect(x, y + h - 14, x + w, y + h, fill=(40, 22, 60))
+    for px_ in (x + w * 0.10, x + w * 0.88):
+        line([(px_, y + h - 14), (px_ + 4, y + 22)], (40, 22, 60), 3)
+        for a in (-150, -120, -60, -30, -90):
+            r = math.radians(a)
+            line([(px_ + 4, y + 22), (px_ + 4 + 16 * math.cos(r), y + 22 - 10 * math.sin(-r) + 8)], (40, 22, 60), 2.4)
+    cx, cy = x + w * 0.44, y + h * 0.52
+    rrect(cx - 30, cy - 15, cx + 30, cy + 16, 15, fill=(250, 250, 250), outline=OUT, width=1.6)
+    rect(cx - 21, cy - 2, cx - 9, cy + 3, fill=OUT)
+    rect(cx - 17.5, cy - 6, cx - 12.5, cy + 7, fill=OUT)
+    for bx, by in ((cx + 12, cy + 2), (cx + 19, cy - 4)):
+        ellipse(bx, by, 3, 3, fill=(178, 34, 34))
+    text(x + 6, y + 5, "MIDNIGHT IN NZ", cond(12.5, 900), (255, 236, 220), tracking=0.6)
+
+
+def art_border(x, y, w, h):
+    P = mini_map(x, y, w, h, 32, 46, 8.5, 18.5, (214, 196, 160), (150, 190, 214))
+    bx = x + w * 0.52
+    for k in range(7):
+        line([(bx, y + 6 + k * (h - 12) / 7), (bx, y + 6 + k * (h - 12) / 7 + (h - 12) / 14)], INK, 2)
+    cy = y + h * 0.56
+    poly([(bx - 6, cy), (bx - 26, cy - 11), (bx - 26, cy - 4), (bx - 48, cy - 4), (bx - 48, cy + 4),
+          (bx - 26, cy + 4), (bx - 26, cy + 11)], (28, 126, 70), outline=OUT, width=1)
+    poly([(bx + 6, cy), (bx + 26, cy - 11), (bx + 26, cy - 4), (bx + 48, cy - 4), (bx + 48, cy + 4),
+          (bx + 26, cy + 4), (bx + 26, cy + 11)], (150, 90, 40), outline=OUT, width=1)
+    f = cond(12.5, 900)
+    text(bx - 8, y + 5, "ETHIOPIA", f, INK, anchor="ra", tracking=0.5)
+    text(bx + 8, y + 5, "ERITREA", f, INK, tracking=0.5)
+
+
+ART = {"shenzhen": art_shenzhen, "gulf": art_gulf, "voyager": art_voyager_lead,
+       "eu": art_eu, "drones_ua": art_drones_ua, "alaska": art_alaska, "cop": art_cop,
+       "inflation": art_inflation, "cyclone": art_cyclone, "sudan": art_sudan,
+       "gold": art_gold, "gta": art_gta, "border": art_border}
+
+
 # ------------------------------------------------------------------ page
-# Every piece of text on the page is MIN_TEXT (17 px) or larger, so it stays
-# readable when the page is shown 300 px across. build() checks this.
 M = 22
 R = W - M
-LINE = 20                  # line height for 17 px text
-
-SZ_X0, SZ_X1 = M, 600
-GF_X0, GF_X1 = 614, R
-LEAD_TOP, LEAD_BOT = 111, 368
-T2_TOP, T2_BOT = 377, 525
-T3_TOP, T3_BOT = 535, 688
-BOT_TOP, BOT_BOT = 698, 994
 
 
-def body(size=MIN_TEXT, wght=600, wdth=75):
-    return font("sans", size, wght, wdth)
-
-
-def fit_line(s, maxw, wght=600, size=MIN_TEXT):
-    """The widest Archivo width (75 down to 62) at which s fits on one line."""
-    for wd in (75, 70, 66, 62):
-        f = font("sans", size, wght, wd)
-        if tlen(s, f) <= maxw:
-            return f
-    raise ValueError("does not fit at %s px: %r" % (size, s))
+def pin(cx, cy, num, col, r=7.5):
+    ellipse(cx, cy, r + 1.3, r + 1.3, fill=(255, 255, 255))
+    ellipse(cx, cy, r, r, fill=col)
+    s = str(num)
+    text(cx, cy + 0.4, s, cond(r * (1.5 if len(s) == 1 else 1.25), 900), (255, 255, 255), anchor="mm")
 
 
 def header():
-    rect(0, 0, W, 6, fill=INK)
-    text(M - 1, 12, "THE WORLD IN A DAY", serif(34, 900, 100), INK)
-    f = cond(26, 900)
-    wtxt, dtxt = "WEDNESDAY ", "18 NOVEMBER 2026"
-    dw = tlen(dtxt, f, 0.4)
-    text(R, 16, dtxt, f, INK, anchor="ra", tracking=0.4)
-    text(R - dw - 10, 16, wtxt.strip(), f, CAT["CONFLICT"], anchor="ra", tracking=0.4)
-    text(M, 53, st.JUDGE_NOTE, body(MIN_TEXT, 600, 80), INK2)
-    line([(M, 77), (R, 77)], INK, 2)
-    line([(M, 80), (R, 80)], INK, 0.7)
-    x = M
-    f = font("sans", MIN_TEXT, 800, 75)
-    for k in ORDER:
-        rect(x, 88, x + 10, 98, fill=CAT[k])
-        x += 14 + text(x + 14, 83.5, CAT_SHORT[k], f, INK2, tracking=0.4) + 16
-    text(R, 83.5, "%d STORIES \u00b7 6 CONTINENTS + SPACE" % st.count(), f, INK2, anchor="ra", tracking=0.4)
-    line([(M, 105), (R, 105)], RULE, 1)
-
-
-def lead_size():
-    for s in range(36, 25, -1):
-        f = serif(s, 900)
-        if (len(wrap(st.SHENZHEN["hed"], f, SZ_X1 - SZ_X0)) <= 2
-                and len(wrap(st.GULF["hed"], f, GF_X1 - GF_X0 - 24)) <= 2):
-            return s
-    return 26
-
-
-def shenzhen_block(hs):
-    L = st.SHENZHEN
-    x0, x1, top = SZ_X0, SZ_X1, LEAD_TOP
-    w = x1 - x0
-    kicker(x0, top, L["kicker"], L["cat"], num=L["num"])
-    hf = serif(hs, 900)
-    y = top + 25
-    for ln in wrap(L["hed"], hf, w):
-        text(x0 - 1, y, ln, hf, INK)
-        y += hs * 1.05
-    y += 3
-    text(x0, y, L["dek"], fit_line(L["dek"], w), INK2)
-    y += LINE + 6
-    aw = 292
-    clipped(art_shenzhen, x0, y, aw, LEAD_BOT - y)
-    bx = x0 + aw + 10
-    rect(bx, y, x1, LEAD_BOT, fill=PAPER2)
-    text(bx + 9, y + 3, "ALSO AT APEC", font("sans", MIN_TEXT, 800, 75), CAT["POWER"], tracking=1)
-    yy = y + 4 + LINE + 1
-    lf_b = font("sans", MIN_TEXT, 800, 75)
-    for label, rest in st.ALSO_AT_APEC:
-        lw = tlen(label + " ", lf_b)
-        text(bx + 9, yy, label, lf_b, INK)
-        text(bx + 9 + lw, yy, rest, fit_line(rest, x1 - bx - 18 - lw, 600), INK2)
-        yy += LINE + 1
-    rect(x0, LEAD_BOT + 3, x1, LEAD_BOT + 6, fill=CAT["POWER"])
-
-
-def gulf_block(hs):
-    L = st.GULF
-    x0, x1, top = GF_X0, GF_X1, LEAD_TOP
-    w = x1 - x0
-    rect(x0, top, x1, LEAD_BOT, fill=(24, 28, 44))
-    clipped(art_gulf, x0, top, w, 108)
-    y = top + 114
-    kicker(x0 + 12, y, L["kicker"], L["cat"], num=L["num"], color=(244, 128, 118), maxw=w - 24)
-    y += 26
-    hf = serif(hs, 900)
-    for ln in wrap(L["hed"], hf, w - 24):
-        text(x0 + 12, y, ln, hf, (255, 255, 255))
-        y += hs * 1.05
-    y += 3
-    for ln in wrap(L["dek"], body(MIN_TEXT, 600, 75), w - 24):
-        text(x0 + 12, y, ln, body(MIN_TEXT, 600, 75), (226, 228, 238))
-        y += LINE
-    rect(x0, LEAD_BOT + 3, x1, LEAD_BOT + 6, fill=CAT["CONFLICT"])
-
-
-def major_row():
-    top = T2_TOP
-    gap = 14
-    cw = (R - M - gap * 3) / 4
-    for i, m in enumerate(st.MAJOR):
-        x0 = M + i * (cw + gap)
-        rect(x0, top, x0 + cw, top + 3, fill=CAT[m["cat"]])
-        clipped(ART[m["art"]], x0, top + 3, cw, 54)
-        y = top + 62
-        kicker(x0, y, m["kicker"], m["cat"], num=m["num"], maxw=cw)
-        y += 25
-        hf = serif(19, 900)
-        for ln in wrap(m["hed"], hf, cw):
-            text(x0, y, ln, hf, INK)
-            y += 20.5
-        y += 2
-        text(x0, y, m["fact"], fit_line(m["fact"], cw), INK2)
-        if i:
-            line([(x0 - gap / 2, top), (x0 - gap / 2, T2_BOT)], RULE, 1)
-
-
-def key_grid():
-    """Twelve stories, each in its own box with its number badge inside."""
-    cols, rows = 4, 3
-    gap = 10
-    cw = (R - M - gap * (cols - 1)) / cols
-    rh = (T3_BOT - T3_TOP) / rows
-    pad = 4
-    for i, k in enumerate(st.KEY):
-        r, c = divmod(i, cols)
-        x0 = M + c * (cw + gap)
-        y0 = T3_TOP + r * rh
-        bh = rh - 3
-        rrect(x0, y0, x0 + cw, y0 + bh, 4, fill=PAPER2, outline=RULE, width=0.8)
-        rect(x0, y0 + 3, x0 + 3, y0 + bh - 3, fill=CAT[k["cat"]])
-        ix = x0 + pad + 4
-        if "big" in k:
-            f = cond(27, 900)
-            iw = tlen(k["big"], f)
-            text(ix, y0 + 7, k["big"], f, CAT[k["cat"]])
-        else:
-            iw = 36
-            icon(k["icon"], ix, y0 + (bh - 36) / 2, 36, k["cat"])
-        tx = ix + iw + 7
-        tw = x0 + cw - pad - tx
-        kicker(tx, y0 + 3, k["kicker"], k["cat"], num=k["num"], maxw=tw)
-        text(tx, y0 + 26, k["hed"], fit_line(k["hed"], tw, 700), INK)
-
-
-# ------------------------------------------------------------- world map
-MAP_LAT0, MAP_LAT1 = 75.0, -48.0
-
-
-def spread(xs, gap, lo, hi):
-    """Push positions apart to at least `gap`, keeping them inside [lo, hi]."""
-    xs = list(xs)
-    for _ in range(400):
-        moved = False
-        for i in range(len(xs) - 1):
-            ov = gap - (xs[i + 1] - xs[i])
-            if ov > 0.01:
-                xs[i] -= ov / 2
-                xs[i + 1] += ov / 2
-                moved = True
-        xs = [min(hi, max(lo, v)) for v in xs]
-        if not moved:
+    rect(0, 0, W, 5, fill=INK)
+    f = cond(13, 800)
+    text(M, 12, "THE DAY IN WORLD NEWS", f, CAT["CONFLICT"], tracking=1.6)
+    text(R, 12, "%d STORIES \u00b7 6 CONTINENTS \u00b7 ONE DAY" % st.count(), f, INK2, anchor="ra", tracking=1.6)
+    title = "Wednesday 18 November 2026"
+    for sz in range(90, 50, -1):
+        tf = serif(sz, 900, 100)
+        if tlen(title, tf) <= R - M:
             break
-    return xs
+    text(M - 2, 26, title, tf, INK)
+    y = 26 + sz * 1.13
+    text(M, y, st.JUDGE_NOTE, serif_i(14, 600), INK2)
+    y += 24
+    # region bar: how many stories from each region
+    counts = {}
+    for _, s in st.all_stories():
+        counts[s["region"]] = counts.get(s["region"], 0) + 1
+    regs = [r for r in st.REGIONS if counts.get(r)]
+    total = sum(counts[r] for r in regs)
+    x = M
+    bf = cond(12.5, 900)
+    need = {r: tlen("%s %d" % (r, counts[r]), bf, 0.8) + 16 for r in regs}
+    spare = (R - M) - sum(need.values())
+    for r in regs:
+        bw = need[r] + spare * counts[r] / total
+        rect(x, y, x + bw - 2, y + 20, fill=REG[r])
+        text(x + bw / 2 - 1, y + 2.5, "%s %d" % (r, counts[r]), bf, (255, 255, 255), anchor="ma", tracking=0.8)
+        x += bw
+    return y + 20
 
 
-def world_map(x0, top, w):
-    h = round(w * (MAP_LAT0 - MAP_LAT1) / 360)
-    strip = 26
-    y0 = top + strip
-    sea = (214, 224, 230)
-    landc = (204, 196, 182)
+def card(x, y, w, art_h, s, num, hsize, dsize, lead):
+    col = REG[s["region"]]
+    rect(x, y, x + w, y + 3, fill=col)
+    clipped(ART[s["art"]], x, y + 3, w, art_h)
+    yy = y + 3 + art_h + 7
+    pin(x + 8, yy + 7, num, col, r=8 if lead else 7.2)
+    kf = cond(12.5 if lead else 11.5, 800)
+    kx = x + 21
+    text(kx, yy, s["region"] + " \u00b7 " + s["beat"], kf, col, tracking=0.6)
+    if lead:
+        text(x + w, yy, s["src"], cond(11.5, 700), GREY, anchor="ra", tracking=0.5)
+    yy += 18
+    hf = serif(hsize, 900)
+    lines = wrap(s["hed"], hf, w)
+    for ln in lines:
+        text(x, yy, ln, hf, INK)
+        yy += hsize * 1.12
+    yy += 3
+    df = sans(dsize, 500, 87.5)
+    for ln in wrap(s["dek"], df, w):
+        text(x, yy, ln, df, INK2)
+        yy += dsize * 1.32
+    return yy
+
+
+def map_block(x0, y0, w):
+    tf = cond(13, 900)
+    text(x0, y0, "WHERE IT HAPPENED", tf, INK, tracking=1.2)
+    my = y0 + 19
+    lat0, lat1 = 75.0, -48.0
+    h = round(w * (lat0 - lat1) / 360)
+    sea, landc = (214, 224, 230), (204, 196, 182)
 
     def P(lo, la):
-        return (x0 + (lo + 180) / 360 * w, y0 + (MAP_LAT0 - la) / (MAP_LAT0 - MAP_LAT1) * h)
+        return (x0 + (lo + 180) / 360 * w, my + (lat0 - la) / (lat0 - lat1) * h)
 
     def land(ax, ay, aw, ah):
         rect(ax, ay, ax + aw, ay + ah, fill=sea)
         for ring in WORLD:
             poly([P(lo, la) for lo, la in ring], landc, outline=(255, 255, 255), width=0.5)
 
-    clipped(land, x0, y0, w, h)
-    rect(x0, y0, x0 + w, y0 + h, outline=RULE, width=1)
-
-    # briefs: small dots
-    for cat, (lo, la), _ in st.briefs_flat():
-        px_, py_ = P(lo, la)
-        ellipse(px_, py_, 2.6, 2.6, fill=(255, 255, 255))
-        ellipse(px_, py_, 2.0, 2.0, fill=CAT[cat])
-
-    # numbered stories: dot at the place, number badge on the map's top or bottom edge
-    dot_r = {1: 5.0, 2: 4.0, 3: 3.2}
-    placed = [(t, s) + P(*s["at"]) for t, s in st.numbered() if s.get("at")]
-    north = sorted([q for q in placed if q[1]["at"][1] >= 28], key=lambda q: q[2])
-    south = sorted([q for q in placed if q[1]["at"][1] < 28], key=lambda q: q[2])
-    for group, by, ly in ((north, top + strip / 2, y0), (south, y0 + h + strip / 2, y0 + h)):
-        xs = spread([q[2] for q in group], 25, x0 + 12, x0 + w - 12)
-        for (tier, s, px_, py_), bx in zip(group, xs):
-            line([(bx, by), (bx, ly), (px_, py_)], INK2, 0.8)
-        for (tier, s, px_, py_), bx in zip(group, xs):
-            r = dot_r[tier]
-            ellipse(px_, py_, r + 1.2, r + 1.2, fill=(255, 255, 255))
-            ellipse(px_, py_, r, r, fill=CAT[s["cat"]])
-            badge(bx, by, s["num"], s["cat"])
-
-    tf = font("sans", MIN_TEXT, 900, 75)
-    title = "WHERE IT HAPPENED"
-    tw = tlen(title, tf, 0.8) + 12
-    rect(x0, y0, x0 + tw, y0 + 22, fill=INK)
-    text(x0 + 6, y0 + 1, title, tf, (255, 255, 255), tracking=0.8)
-
-    # legend: categories, then dot size and Voyager
-    ly = y0 + h + strip + 4
-    lf = font("sans", MIN_TEXT, 800, 66)
-    xx = x0
-    for k in ORDER:
-        ellipse(xx + 5, ly + 10, 5, 5, fill=CAT[k])
-        xx += 12 + text(xx + 12, ly, CAT_SHORT[k], lf, INK2, tracking=0.2) + 9
-    ly += LINE + 4
-    xx = x0
-    for r in (5.0, 4.0, 3.2, 2.0):
-        ellipse(xx + r, ly + 10, r, r, fill=(120, 120, 128))
-        xx += 2 * r + 3
-    text(xx + 3, ly, "Dot size = importance", font("sans", MIN_TEXT, 700, 66), INK2)
-    s5 = st.MAJOR[2]
-    lab = "VOYAGER 1 \u2192 25.9bn km, OFF MAP"
-    vf = font("sans", MIN_TEXT, 900, 66)
-    vw = tlen(lab, vf, 0.2) + 34
-    bx1 = x0 + w
-    rect(bx1 - vw, ly - 1, bx1, ly + 22, fill=(26, 20, 66))
-    badge(bx1 - vw + 12, ly + 10.5, s5["num"], s5["cat"])
-    text(bx1 - vw + 27, ly + 0.5, lab, vf, OCHRE, tracking=0.2)
-    return ly + 22
+    clipped(land, x0, my, w, h)
+    stories = st.all_stories()
+    nlead = len(st.LEAD) + len(st.CARDS)
+    for n, s in stories[nlead:]:
+        px_, py_ = P(*s["at"])
+        ellipse(px_, py_, 2.4, 2.4, fill=(255, 255, 255))
+        ellipse(px_, py_, 1.8, 1.8, fill=REG[s["region"]])
+    pins = [(n, s) + P(*s["at"]) for n, s in stories[:nlead] if s.get("at")]
+    pos = [[q[2], q[3]] for q in pins]
+    for _ in range(300):
+        for i in range(len(pos)):
+            for j in range(i + 1, len(pos)):
+                dx, dy = pos[j][0] - pos[i][0], pos[j][1] - pos[i][1]
+                dist = math.hypot(dx, dy) or 0.01
+                if dist < 15:
+                    push = (15 - dist) / 2
+                    ux, uy = dx / dist, dy / dist
+                    pos[i][0] -= ux * push; pos[i][1] -= uy * push
+                    pos[j][0] += ux * push; pos[j][1] += uy * push
+        for q in pos:
+            q[0] = min(x0 + w - 8, max(x0 + 8, q[0]))
+            q[1] = min(my + h - 8, max(my + 8, q[1]))
+    for (n, s, tx, ty), (cx, cy) in zip(pins, pos):
+        if math.hypot(cx - tx, cy - ty) > 3:
+            line([(tx, ty), (cx, cy)], INK2, 0.7)
+            ellipse(tx, ty, 1.4, 1.4, fill=INK)
+    for (n, s, tx, ty), (cx, cy) in zip(pins, pos):
+        pin(cx, cy, n, REG[s["region"]], r=6.6)
+    # Voyager is off the map
+    lab = "3 \u2192 VOYAGER 1, OFF THE MAP"
+    lf = cond(11, 900)
+    tw = tlen(lab, lf, 0.4) + 10
+    vx, vy = x0 + 4 + tw, my + h - 12
+    rect(vx - tw, vy - 8, vx, vy + 8, fill=REG["SPACE"])
+    text(vx - tw + 5, vy - 6.5, lab, lf, OCHRE, tracking=0.4)
+    return my + h
 
 
-def briefs(x0, x1, top):
-    cols = [[0, 2, 3], [1, 4]]       # Asia + Europe + Africa | Oceania + Americas
-    gap = 12
+def stats_block(x0, y0, w):
+    cw = (w - 12) / 2
+    for i, (big, small) in enumerate(st.STATS):
+        cx = x0 + (i % 2) * (cw + 12)
+        cy = y0 + (i // 2) * 52
+        line([(cx, cy), (cx + cw, cy)], INK, 1.2)
+        text(cx, cy + 3, big, serif(18, 900), INK)
+        for k, ln in enumerate(wrap(small, sans(11, 500, 80), cw)[:2]):
+            text(cx, cy + 25 + k * 12.5, ln, sans(11, 500, 80), INK2)
+
+
+def also_block(x0, y0, x1, y_end):
+    text(x0, y0, "ALSO ON WEDNESDAY 18 NOVEMBER", cond(13, 900), INK, tracking=1.2)
+    line([(x0, y0 + 18), (x1, y0 + 18)], INK, 1.4)
+    stories = st.all_stories()[len(st.LEAD) + len(st.CARDS):]
+    half = (len(stories) + 1) // 2
+    gap = 16
     cw = (x1 - x0 - gap) / 2
-    bottom = top
-    for ci, idxs in enumerate(cols):
-        cx = x0 + ci * (cw + gap)
-        y = top
-        for bi in idxs:
-            region, items = st.BRIEFS[bi]
-            hdr = 23
-            box_h = hdr + 4 + LINE * len(items) + 4
-            rect(cx, y, cx + cw, y + box_h, fill=PAPER2)
-            rect(cx, y, cx + cw, y + hdr, fill=INK)
-            text(cx + 7, y + 1.5, region, font("sans", MIN_TEXT, 900, 75), (255, 255, 255), tracking=1)
-            yy = y + hdr + 4
-            for cat, _, s_ in items:
-                rect(cx + 6, yy + 6, cx + 13, yy + 13, fill=CAT[cat])
-                text(cx + 18, yy, s_, fit_line(s_, cw - 24, 600), INK)
-                yy += LINE
-            y += box_h + 8
-        bottom = max(bottom, y - 8)
-    return bottom
+    lead_ = (y_end - (y0 + 24)) / half
+    for i, (n, s) in enumerate(stories):
+        c, r = divmod(i, half)
+        cx = x0 + c * (cw + gap)
+        cy = y0 + 24 + r * lead_
+        col = REG[s["region"]]
+        rect(cx, cy + 1, cx + 19, cy + 15, fill=col)
+        text(cx + 9.5, cy + 2, str(n), cond(11.5, 900), (255, 255, 255), anchor="ma")
+        pf = font("sans", 12.5, 800, 80)
+        pw = tlen(s["place"] + ": ", pf)
+        text(cx + 24, cy + 1, s["place"] + ":", pf, INK)
+        rest = s["hed"]
+        maxw = cw - 24 - pw
+        for wd in (80, 75, 70, 66, 62):
+            rf = font("sans", 12.5, 500, wd)
+            if tlen(rest, rf) <= maxw:
+                break
+        text(cx + 24 + pw, cy + 1, rest, rf, INK2)
 
 
 def footer():
-    line([(M, 998), (R, 998)], INK, 1)
-    f = font("sans", MIN_TEXT, 600, 66)
-    text(M, 1001, st.SOURCES, f, GREY)
-    text(R, 1001, "Illustrations drawn in code", f, GREY, anchor="ra")
+    line([(M, 1003), (R, 1003)], INK, 1)
+    f = sans(11, 500, 80)
+    text(M, 1007, st.FOOT_NOTE, f, GREY)
+    text(R, 1007, st.SOURCES, f, GREY, anchor="ra")
 
 
 def build():
-    header()
-    hs = lead_size()
-    shenzhen_block(hs)
-    gulf_block(hs)
-    major_row()
-    line([(M, 530), (R, 530)], INK, 1.4)
-    key_grid()
-    line([(M, 692), (R, 692)], INK, 1.4)
-    mw = 446
-    map_bottom = world_map(M, BOT_TOP, mw)
-    brief_bottom = briefs(M + mw + 14, R, BOT_TOP)
+    y = header() + 12
+    # lead row
+    gap = 16
+    lw = (R - M - gap * 2) / 3
+    ends = []
+    for i, s in enumerate(st.LEAD):
+        ends.append(card(M + i * (lw + gap), y, lw, 104, s, i + 1, 22, 13.5, True))
+    y = max(ends) + 8
+    line([(M, y), (R, y)], RULE, 1)
+    y += 9
+    # two rows of five picture cards
+    gap = 12
+    cw = (R - M - gap * 4) / 5
+    n = len(st.LEAD) + 1
+    for row in range(2):
+        ends = []
+        for c in range(5):
+            s = st.CARDS[row * 5 + c]
+            ends.append(card(M + c * (cw + gap), y, cw, 60, s, n, 16, 12, False))
+            n += 1
+        y = max(ends) + 7
+    line([(M, y), (R, y)], INK, 1.4)
+    y += 8
+    mw = 330
+    map_end = map_block(M, y, mw)
+    stats_block(M, map_end + 10, mw)
+    also_block(M + mw + 22, y, R, 998)
     footer()
-
-    small = sorted(set((round(sz, 2), s) for sz, s in TEXT_SIZES if sz < MIN_TEXT - 0.01))
-    assert not small, "text below %d px: %r" % (MIN_TEXT, small[:5])
-    assert map_bottom <= 994 and brief_bottom <= 994, (map_bottom, brief_bottom)
 
     out = img.resize((W, H), Image.LANCZOS)
     buf = io.BytesIO()
@@ -894,8 +1002,8 @@ def build():
         data = buf.getvalue()
     with open(os.path.join(HERE, "entry.png"), "wb") as fh:
         fh.write(data)
-    print("entry.png", len(data), "bytes; lead", hs, "px; smallest text",
-          round(min(sz for sz, _ in TEXT_SIZES), 2), "px; map/briefs end", round(map_bottom), round(brief_bottom))
+    print("entry.png", len(data), "bytes; cards end", round(y), "map end", round(map_end),
+          "smallest text", round(min(sz for sz, _ in TEXT_SIZES), 1))
 
 
 if __name__ == "__main__":
